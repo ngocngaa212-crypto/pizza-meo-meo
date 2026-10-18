@@ -650,7 +650,7 @@ elif st.session_state.phase == "summary":
     else:
         for r in st.session_state.reviews:
             with st.container(border=True):
-                st.write(f*🐱 {r['name']}**")
+                st.write(f"**🐱 {r['name']}**")
                 st.write(r["review"])
                 st.caption(
                     f"Độ chính xác: {r['score']}% · "
