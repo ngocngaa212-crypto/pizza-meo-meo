@@ -373,7 +373,7 @@ if st.session_state.phase == "start":
     """, unsafe_allow_html=True)
 
     st.write("")
-    st.image(pizza_svg(), width=250)
+    st.markdown(pizza_svg(),unsafe_allow_html=True)
 
     _, mid, _ = st.columns([1, 2, 1])
     with mid:
