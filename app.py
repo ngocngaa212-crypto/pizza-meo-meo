@@ -1,6 +1,7 @@
 import base64
 import os
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(
     page_title="Pizza Meo Meo 🐾",
@@ -9,9 +10,36 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+# Style ẩn toàn bộ khung thừa của Streamlit để hiển thị tràn màn hình
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .block-container {
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
+        padding-left: 0rem !important;
+        padding-right: 0rem !important;
+        max-width: 100% !important;
+    }
+    iframe {
+        border: none !important;
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+    body {
+        margin: 0;
+        overflow: hidden;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
 
-def set_bg_and_style(image_base_name, is_start_screen=False):
-    image_file = None
+
+def get_base64_image(image_base_name):
     for possible_name in [
         f"{image_base_name}.png.jpg",
         f"{image_base_name}.jpg",
@@ -19,179 +47,350 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
         f"{image_base_name}.jpeg",
     ]:
         if os.path.exists(possible_name):
-            image_file = possible_name
-            break
+            try:
+                with open(possible_name, "rb") as f:
+                    return f"data:image/jpeg;base64,{base64.b64encode(f.read()).decode()}"
+            except Exception:
+                pass
+    return ""
 
-    bg_css = ""
-    if image_file:
-        try:
-            with open(image_file, "rb") as f:
-                encoded_string = base64.b64encode(f.read()).decode()
-            bg_css = f'background-image: url("data:image/jpeg;base64,{encoded_string}");'
-        except Exception:
-            pass
 
-    button_style = ""
-    if is_start_screen:
-        button_style = """
-        .stButton > button {
-            background: transparent !important;
-            border: 2px dashed rgba(255, 152, 0, 0.6) !important;
-            color: transparent !important;
-            box-shadow: none !important;
-            height: 52px !important;
-            border-radius: 26px !important;
-            cursor: pointer !important;
-            margin-top: 42px !important;
-            margin-left: 35px !important;
-        }
-        .stButton > button:hover {
-            background: rgba(255, 183, 77, 0.3) !important;
-            border: 2px solid #FF9800 !important;
-        }
-        """
-    else:
-        # Nút bấm trong màn hình bếp
-        button_style = """
-        .stButton > button {
-            border-radius: 15px;
-            font-weight: bold;
-            font-size: 15px;
-            background-color: rgba(255, 248, 225, 0.9);
-            color: #8D4B38;
-            border: 2px solid #FFB74D;
-            box-shadow: 0px 3px 6px rgba(0,0,0,0.15);
-            padding: 5px 10px;
-        }
-        .stButton > button:hover {
-            background-color: #FFE0B2;
-            color: #E65100;
-        }
-        """
+bg_start_data = get_base64_image("bg_start")
+bg_play_data = get_base64_image("bg_play")
+bg_summary_data = get_base64_image("bg_summary")
 
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-color: #FFF3E0;
-            {bg_css}
-            background-attachment: fixed;
-            background-size: contain !important;
-            background-position: center center;
-            background-repeat: no-repeat;
+html_code = f"""
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<style>
+    * {{
+        box-sizing: border-box;
+        user-select: none;
+    }}
+    body, html {{
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #333;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }}
+    #game-container {{
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }}
+    canvas {{
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        cursor: pointer;
+    }}
+</style>
+</head>
+<body>
+<div id="game-container">
+    <canvas id="gameCanvas" width="1280" height="720"></canvas>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Load Images
+const images = {{}};
+const bgStartSrc = "{bg_start_data}";
+const bgPlaySrc = "{bg_play_data}";
+const bgSummarySrc = "{bg_summary_data}";
+
+if (bgStartSrc) {{ images.start = new Image(); images.start.src = bgStartSrc; }}
+if (bgPlaySrc) {{ images.play = new Image(); images.play.src = bgPlaySrc; }}
+if (bgSummarySrc) {{ images.summary = new Image(); images.summary.src = bgSummarySrc; }}
+
+// Audio Context Web Audio API
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {{
+    if (audioCtx.state === 'suspended') {{ audioCtx.resume(); }}
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    if (type === 'pop') {{
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+    }} else if (type === 'bake') {{
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }} else if (type === 'coin') {{
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.25);
+    }}
+}}
+
+// Game State Management
+let gameState = 'START'; // START, PLAY, SUMMARY
+let day = 3;
+let coins = 100;
+
+// Current Pizza State
+let hasCrust = false;
+let hasSauce = false;
+let hasCheese = false;
+let toppings = []; // {{ type: 'pepperoni'|'mushroom'|'pepper'|'olive', x: number, y: number }}
+let selectedTool = null; // 'crust', 'sauce', 'cheese', 'pepperoni', 'mushroom', 'pepper', 'olive'
+
+// Topping Tray Definitions (Responsive Coords)
+const trays = [
+    {{ id: 'crust', name: 'Đế bánh', x: 250, y: 440, w: 120, h: 180, color: '#D7CCC8' }},
+    {{ id: 'sauce', name: 'Sốt cà', x: 650, y: 430, w: 90, h: 80, color: '#EF5350' }},
+    {{ id: 'cheese', name: 'Phô mai', x: 750, y: 430, w: 90, h: 80, color: '#FFEE58' }},
+    {{ id: 'pepperoni', name: 'Xúc xích', x: 850, y: 430, w: 90, h: 80, color: '#D32F2F' }},
+    {{ id: 'mushroom', name: 'Nấm', x: 650, y: 520, w: 90, h: 80, color: '#8D6E63' }},
+    {{ id: 'pepper', name: 'Ớt chuông', x: 750, y: 520, w: 90, h: 80, color: '#66BB6A' }},
+    {{ id: 'olive', name: 'Ô liu', x: 850, y: 520, w: 90, h: 80, color: '#424242' }}
+];
+
+// Oven Area
+const ovenArea = {{ x: 1040, y: 380, w: 200, h: 250 }};
+
+// Pizza Area on Board
+const pizzaCenter = {{ x: 495, y: 535, r: 130 }};
+
+// Order Criteria
+const currentOrder = {{
+    customer: "Miu Cam",
+    sauce: true,
+    cheese: true,
+    pepperoni: 5,
+    mushroom: 3,
+    pepper: 2
+}};
+
+// Event Listeners
+canvas.addEventListener('click', function(e) {{
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    if (gameState === 'START') {{
+        // Start Game Button Area (Fit exactly on button)
+        if (x >= 400 && x <= 880 && y >= 450 && y <= 550) {{
+            playSound('pop');
+            gameState = 'PLAY';
+            resetPizza();
         }}
-        {button_style}
-        #MainMenu {{visibility: hidden;}}
-        footer {{visibility: hidden;}}
-        header {{visibility: hidden;}}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    }} else if (gameState === 'PLAY') {{
+        // Check Trays Selection
+        let clickedTray = false;
+        trays.forEach(tray => {{
+            if (x >= tray.x && x <= tray.x + tray.w && y >= tray.y && y <= tray.y + tray.h) {{
+                selectedTool = tray.id;
+                playSound('pop');
+                clickedTray = true;
+                
+                // Direct Crust Application
+                if (tray.id === 'crust') {{
+                    hasCrust = true;
+                }}
+            }}
+        }});
 
+        // Click on Oven -> Finish & Bake
+        if (x >= ovenArea.x && x <= ovenArea.x + ovenArea.w && y >= ovenArea.y && y <= ovenArea.y + ovenArea.h) {{
+            if (hasCrust) {{
+                playSound('bake');
+                setTimeout(() => playSound('coin'), 300);
+                coins += 100;
+                gameState = 'SUMMARY';
+            }}
+            return;
+        }}
 
-# Khởi tạo dữ liệu game
-if "game_state" not in st.session_state:
-    st.session_state.game_state = "START"
-if "day" not in st.session_state:
-    st.session_state.day = 3
-if "coins" not in st.session_state:
-    st.session_state.coins = 100
-if "current_pizza" not in st.session_state:
-    st.session_state.current_pizza = []
+        // Click on Pizza Area to Place Topping
+        if (!clickedTray) {{
+            const dist = Math.hypot(x - pizzaCenter.x, y - pizzaCenter.y);
+            if (dist <= pizzaCenter.r) {{
+                if (!hasCrust) {{
+                    hasCrust = true;
+                    playSound('pop');
+                }} else if (selectedTool === 'sauce') {{
+                    hasSauce = true;
+                    playSound('pop');
+                }} else if (selectedTool === 'cheese') {{
+                    hasCheese = true;
+                    playSound('pop');
+                }} else if (['pepperoni', 'mushroom', 'pepper', 'olive'].includes(selectedTool)) {{
+                    toppings.push({{ type: selectedTool, x: x, y: y }});
+                    playSound('pop');
+                }}
+            }}
+        }}
+    }} else if (gameState === 'SUMMARY') {{
+        // Next Day Button
+        if (x >= 400 && x <= 620 && y >= 480 && y <= 560) {{
+            playSound('pop');
+            day += 1;
+            gameState = 'PLAY';
+            resetPizza();
+        }}
+        // Home Button
+        if (x >= 660 && x <= 880 && y >= 480 && y <= 560) {{
+            playSound('pop');
+            gameState = 'START';
+        }}
+    }}
+}});
 
-# ==========================================
-# MÀN HÌNH 1: START GAME
-# ==========================================
-if st.session_state.game_state == "START":
-    set_bg_and_style("bg_start", is_start_screen=True)
+function resetPizza() {{
+    hasCrust = false;
+    hasSauce = false;
+    hasCheese = false;
+    toppings = [];
+    selectedTool = null;
+}}
 
-    st.markdown("<br>" * 17, unsafe_allow_html=True)
+// Render Loop
+function render() {{
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    col1, col2, col3 = st.columns([1.2, 1.0, 1.1])
-    with col2:
-        if st.button("START_GAME_BTN", use_container_width=True):
-            st.session_state.game_state = "PLAYING"
-            st.session_state.current_pizza = []
-            st.rerun()
+    if (gameState === 'START') {{
+        if (images.start && images.start.complete) {{
+            ctx.drawImage(images.start, 0, 0, canvas.width, canvas.height);
+        }} else {{
+            ctx.fillStyle = '#FFF3E0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8D4B38';
+            ctx.font = 'bold 48px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Tiệm Pizza Của Những Chú Mèo 🐾', canvas.width/2, 250);
+            
+            ctx.fillStyle = '#FFB74D';
+            ctx.beginPath();
+            ctx.roundRect(440, 450, 400, 80, 40);
+            ctx.fill();
+            ctx.fillStyle = '#FFF';
+            ctx.fillText('START GAME', canvas.width/2, 505);
+        }}
+    }} else if (gameState === 'PLAY') {{
+        if (images.play && images.play.complete) {{
+            ctx.drawImage(images.play, 0, 0, canvas.width, canvas.height);
+        }} else {{
+            ctx.fillStyle = '#FFE0B2';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }}
 
-# ==========================================
-# MÀN HÌNH 2: BẾP LÀM BÁNH
-# ==========================================
-elif st.session_state.game_state == "PLAYING":
-    set_bg_and_style("bg_play")
+        // Draw Interactive Pizza
+        if (hasCrust) {{
+            ctx.save();
+            ctx.fillStyle = '#E5A967';
+            ctx.beginPath();
+            ctx.arc(pizzaCenter.x, pizzaCenter.y, pizzaCenter.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.lineWidth = 10;
+            ctx.strokeStyle = '#C68642';
+            ctx.stroke();
 
-    # Khoảng trống đẩy khu vực thao tác xuống bàn bếp
-    st.markdown("<br>" * 11, unsafe_allow_html=True)
+            // Inner Dough
+            ctx.fillStyle = '#F5D6A7';
+            ctx.beginPath();
+            ctx.arc(pizzaCenter.x, pizzaCenter.y, pizzaCenter.r - 12, 0, Math.PI * 2);
+            ctx.fill();
 
-    # Chia cột khớp với vị trí các khay nguyên liệu trên hình
-    col_de, col_banh, col_khay1, col_khay2, col_lo = st.columns(
-        [1.2, 1.3, 1.2, 1.2, 1.1]
-    )
+            // Sauce
+            if (hasSauce) {{
+                ctx.fillStyle = '#D32F2F';
+                ctx.beginPath();
+                ctx.arc(pizzaCenter.x, pizzaCenter.y, pizzaCenter.r - 22, 0, Math.PI * 2);
+                ctx.fill();
+            }}
 
-    with col_de:
-        st.write("🔴 **Khay bột**")
-        if st.button("➕ Đặt đế bánh"):
-            if "Đế bánh" not in st.session_state.current_pizza:
-                st.session_state.current_pizza.append("Đế bánh")
+            // Cheese
+            if (hasCheese) {{
+                ctx.fillStyle = '#FFF176';
+                ctx.beginPath();
+                ctx.arc(pizzaCenter.x, pizzaCenter.y, pizzaCenter.r - 28, 0, Math.PI * 2);
+                ctx.fill();
+            }}
 
-    with col_banh:
-        st.write("🍕 **Chiếc bánh đang làm:**")
-        if not st.session_state.current_pizza:
-            st.caption("(Chưa có nguyên liệu)")
-        else:
-            for item in st.session_state.current_pizza:
-                st.write(f"• {item}")
-        if st.button("🗑️ Làm lại"):
-            st.session_state.current_pizza = []
-            st.rerun()
+            // Toppings
+            toppings.forEach(top => {{
+                ctx.beginPath();
+                if (top.type === 'pepperoni') {{
+                    ctx.fillStyle = '#B71C1C';
+                    ctx.arc(top.x, top.y, 14, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#D32F2F';
+                    ctx.arc(top.x - 2, top.y - 2, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                }} else if (top.type === 'mushroom') {{
+                    ctx.fillStyle = '#795548';
+                    ctx.arc(top.x, top.y, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                }} else if (top.type === 'pepper') {{
+                    ctx.fillStyle = '#388E3C';
+                    ctx.rect(top.x - 8, top.y - 8, 16, 8);
+                    ctx.fill();
+                }} else if (top.type === 'olive') {{
+                    ctx.fillStyle = '#212121';
+                    ctx.arc(top.x, top.y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                }}
+            }});
+            ctx.restore();
+        }}
 
-    with col_khay1:
-        st.write("🍅 **Sốt & Phô mai**")
-        if st.button("➕ Sốt cà chua"):
-            st.session_state.current_pizza.append("Sốt cà chua")
-        if st.button("➕ Phô mai"):
-            st.session_state.current_pizza.append("Phô mai")
-        if st.button("➕ Nấm"):
-            st.session_state.current_pizza.append("Nấm")
+        // Highlight Selected Tray
+        if (selectedTool) {{
+            const activeTray = trays.find(t => t.id === selectedTool);
+            if (activeTray) {{
+                ctx.strokeStyle = '#FF9800';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(activeTray.x - 2, activeTray.y - 2, activeTray.w + 4, activeTray.h + 4);
+            }}
+        }}
 
-    with col_khay2:
-        st.write("🥓 **Topping**")
-        if st.button("➕ Xúc xích"):
-            st.session_state.current_pizza.append("Xúc xích")
-        if st.button("➕ Ớt chuông"):
-            st.session_state.current_pizza.append("Ớt chuông")
-        if st.button("➕ Ô liu"):
-            st.session_state.current_pizza.append("Ô liu")
+    }} else if (gameState === 'SUMMARY') {{
+        if (images.summary && images.summary.complete) {{
+            ctx.drawImage(images.summary, 0, 0, canvas.width, canvas.height);
+        }} else {{
+            ctx.fillStyle = '#FFF3E0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#8D4B38';
+            ctx.font = 'bold 42px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('HẾT NGÀY LÀM VIỆC! 🐾', canvas.width/2, 250);
+            ctx.fillText(`Tổng doanh thu: ${{coins}} Xu`, canvas.width/2, 330);
+        }}
+    }}
 
-    with col_lo:
-        st.write("🔥 **Lò nướng**")
-        if st.button("🔥 Nướng & Giao bánh"):
-            if len(st.session_state.current_pizza) >= 3:
-                st.session_state.coins += 100
-                st.session_state.game_state = "SUMMARY"
-                st.rerun()
-            else:
-                st.warning("Cho thêm nguyên liệu vào bánh đã ní ơi!")
+    requestAnimationFrame(render);
+}}
 
-# ==========================================
-# MÀN HÌNH 3: HẾT GIỜ RỒI!
-# ==========================================
-elif st.session_state.game_state == "SUMMARY":
-    set_bg_and_style("bg_summary")
+render();
+</script>
+</body>
+</html>
+"""
 
-    st.markdown("<br>" * 16, unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        btn_col1, btn_col2 = st.columns(2)
-        with btn_col1:
-            if st.button("🌻 NGÀY MỚI", use_container_width=True):
-                st.session_state.day += 1
-                st.session_state.current_pizza = []
-                st.session_state.game_state = "PLAYING"
-                st.rerun()
-        with btn_col2:
-            if st.button("🏠 TRANG CHỦ", use_container_width=True):
-                st.session_state.game_state = "START"
-                st.rerun()
+components.html(html_code, height=720, scrolling=False)
