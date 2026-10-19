@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS cho phong cách mèo & màu sắc ấm áp
+# Custom CSS cho phong cách mèo & màu sắc ấm áp (Đã loại bỏ tham số gây lỗi)
 st.markdown(
     """
 <style>
@@ -62,8 +62,7 @@ st.markdown(
         font-size: 22px;
     }
 </style>
-""",
-    unsafe_style_allowed_tags=True,
+"""
 )
 
 # --- KHỞI TẠO NGUYÊN LIỆU ---
@@ -82,7 +81,7 @@ INGREDIENTS = {
 CAT_CUSTOMERS = [
     {"name": "Mèo Béo Miu Miu 🐱", "avatar": "🐱", "personality": "Thèm ăn"},
     {"name": "Tiểu Mộc Mèo 😸", "avatar": "😸", "personality": "Vui vẻ"},
-    {"name": "Quý Bà Hoàng Gia 😺", "avatar": "😺", "personality": "Kó tính"},
+    {"name": "Quý Bà Hoàng Gia 😺", "avatar": "😺", "personality": "Khó tính"},
     {"name": "Mèo Mập Mập 😸", "avatar": "😸", "personality": "Dễ tính"},
     {"name": "Hoàng Tử Mèo 🐈‍⬛", "avatar": "🐈‍⬛", "personality": "Sang chảnh"},
 ]
@@ -113,7 +112,6 @@ MAX_CUSTOMERS_PER_DAY = 3
 # --- HÀM TẠO ĐƠN HÀNG MỚI ---
 def generate_new_customer():
     cat = random.choice(CAT_CUSTOMERS)
-    # Ngẫu nhiên chọn 2-4 loại topping
     num_toppings = random.randint(2, 4)
     chosen_toppings = random.sample(
         list(INGREDIENTS["toppings"].keys()), num_toppings
@@ -121,8 +119,8 @@ def generate_new_customer():
 
     st.session_state.current_customer = cat
     st.session_state.current_order = {
-        "sauce": True,  # Luôn cần sốt
-        "cheese": True,  # Luôn cần phô mai
+        "sauce": True,
+        "cheese": True,
         "toppings": chosen_toppings,
     }
 
@@ -195,11 +193,9 @@ else:
             <li><b>Topping:</b> {', '.join(order['toppings'])}</li>
         </ul>
     </div>
-    """,
-        unsafe_style_allowed_tags=True,
+    """
     )
 
-    # Tiến trình trong ngày
     st.caption(
         f"Khách hàng thứ {st.session_state.day_customers + 1}/{MAX_CUSTOMERS_PER_DAY} trong Ngày {st.session_state.day}"
     )
@@ -225,7 +221,6 @@ else:
     # 3. Hiển thị chiếc Pizza thực tế
     st.markdown("### 🍕 Chiếc Pizza Của Bạn:")
 
-    # Render pizza bằng HTML/CSS
     pizza_toppings_html = "".join(
         [
             f"<span>{INGREDIENTS['toppings'][t]}</span>"
@@ -252,8 +247,7 @@ else:
                 </div>
             </div>
         </div>
-        """,
-            unsafe_style_allowed_tags=True,
+        """
         )
     else:
         st.warning("⚠️ Bạn chưa chuẩn bị Bột nhào (Đế bánh)!")
@@ -267,7 +261,6 @@ else:
             with st.spinner("🔥 Đang nướng pizza trong lò nướng thơm lừng..."):
                 time.sleep(1.8)
 
-            # Tính toán độ chính xác
             score = 100
             reasons = []
 
@@ -278,7 +271,6 @@ else:
                 score -= 25
                 reasons.append("Thiếu phô mai")
 
-            # Check topping
             target_toppings = set(order["toppings"])
             user_toppings = set(selected_toppings)
 
@@ -294,19 +286,16 @@ else:
 
             score = max(0, score)
 
-            # Tính tiền thưởng
             base_pay = 20
             tip = int((score / 100) * 15)
             earned_money = base_pay + tip if score >= 50 else 5
 
-            # Cập nhật kết quả
             st.session_state.day_money += earned_money
             st.session_state.total_money += earned_money
             st.session_state.day_customers += 1
             st.session_state.customers_served += 1
             st.session_state.satisfaction_scores.append(score)
 
-            # Phản hồi của khách
             st.markdown("### 📝 Đánh Giá Của Khách Hàng:")
             if score == 100:
                 st.balloons()
@@ -325,7 +314,6 @@ else:
             if reasons:
                 st.caption("Chi tiết: " + "; ".join(reasons))
 
-            # Kiểm tra xem đã kết thúc ngày chưa
             if st.session_state.day_customers >= MAX_CUSTOMERS_PER_DAY:
                 st.session_state.day_ended = True
             else:
