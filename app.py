@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS cho phong cách mèo & màu sắc ấm áp
+# Custom CSS cho phong cách mèo & hiệu ứng bánh Pizza
 st.markdown(
     """
 <style>
@@ -28,38 +28,48 @@ st.markdown(
         background-color: #E8D8C8;
         border-radius: 50%;
         padding: 20px;
-        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         border: 4px dashed #B08968;
+        width: 320px;
+        height: 320px;
+        margin: 0 auto;
     }
     .pizza-crust {
         background-color: #E6A15C;
         border-radius: 50%;
-        padding: 25px;
-        display: inline-block;
-        min-width: 220px;
-        min-height: 220px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        width: 280px;
+        height: 280px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+        position: relative;
     }
     .pizza-sauce {
         background-color: #D64045;
         border-radius: 50%;
-        padding: 20px;
-        min-width: 170px;
-        min-height: 170px;
-        display: inline-block;
+        width: 230px;
+        height: 230px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
     }
     .pizza-cheese {
         background-color: #FFD166;
         border-radius: 50%;
-        padding: 15px;
-        min-width: 140px;
-        min-height: 140px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 5px;
-        font-size: 22px;
+        width: 190px;
+        height: 190px;
+        position: relative;
+        overflow: hidden;
+    }
+    .topping-item {
+        position: absolute;
+        font-size: 20px;
+        user-select: none;
+        transform: translate(-50%, -50%);
     }
 </style>
 """,
@@ -85,6 +95,23 @@ CAT_CUSTOMERS = [
     {"name": "Quý Bà Hoàng Gia 😺", "avatar": "😺", "personality": "Khó tính"},
     {"name": "Mèo Mập Mập 😸", "avatar": "😸", "personality": "Dễ tính"},
     {"name": "Hoàng Tử Mèo 🐈‍⬛", "avatar": "🐈‍⬛", "personality": "Sang chảnh"},
+]
+
+# Tọa độ ngẫu nhiên cố định tương đối quanh hình tròn bánh (bán kính <= 40%)
+TOPPING_POSITIONS = [
+    (50, 50),
+    (30, 30),
+    (70, 30),
+    (30, 70),
+    (70, 70),
+    (50, 25),
+    (25, 50),
+    (75, 50),
+    (50, 75),
+    (38, 40),
+    (62, 40),
+    (40, 62),
+    (60, 62),
 ]
 
 # --- QUẢN LÝ STATE ---
@@ -220,21 +247,34 @@ else:
             if st.checkbox(f"{top_name}"):
                 selected_toppings.append(top_name)
 
-    # 3. Hiển thị chiếc Pizza thực tế
+    # 3. Hiển thị chiếc Pizza thực tế với Topping rải đều
     st.markdown("### 🍕 Chiếc Pizza Của Bạn:")
 
-    pizza_toppings_html = "".join(
-        [
-            f"<span>{INGREDIENTS['toppings'][t]}</span>"
-            for t in selected_toppings
-        ]
-    )
+    # Tạo HTML cho topping rải rác xung quanh
+    topping_elements = []
+    if selected_toppings and has_cheese:
+        pos_idx = 0
+        # Mỗi loại topping được chọn sẽ đặt 4-5 miếng ở các vị trí khác nhau
+        for t in selected_toppings:
+            emoji = INGREDIENTS["toppings"][t]
+            for _ in range(4):
+                top_percent, left_percent = TOPPING_POSITIONS[
+                    pos_idx % len(TOPPING_POSITIONS)
+                ]
+                topping_elements.append(
+                    f'<span class="topping-item" style="top:{top_percent}%; left:{left_percent}%;">{emoji}</span>'
+                )
+                pos_idx += 3
+
+    pizza_toppings_html = "".join(topping_elements)
 
     sauce_style = (
-        'class="pizza-sauce"' if has_sauce else 'style="padding:20px;"'
+        'class="pizza-sauce"' if has_sauce else 'style="background:transparent;"'
     )
     cheese_style = (
-        'class="pizza-cheese"' if has_cheese else 'style="padding:15px;"'
+        'class="pizza-cheese"'
+        if has_cheese
+        else 'style="background:transparent;"'
     )
 
     if has_dough:
@@ -244,7 +284,7 @@ else:
             <div class="pizza-crust">
                 <div {sauce_style}>
                     <div {cheese_style}>
-                        {pizza_toppings_html if has_cheese else "<i>Chưa có phô mai</i>"}
+                        {pizza_toppings_html}
                     </div>
                 </div>
             </div>
