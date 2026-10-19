@@ -34,16 +34,17 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
 
     button_style = ""
     if is_start_screen:
-        # Nút tàng hình đè khớp nút START GAME
+        # Căn chỉnh margin-top để kéo nút xuống chính xác
         button_style = """
         .stButton > button {
             background: transparent !important;
             border: 2px dashed rgba(255, 152, 0, 0.6) !important;
             color: transparent !important;
             box-shadow: none !important;
-            height: 58px !important;
+            height: 60px !important;
             border-radius: 30px !important;
             cursor: pointer !important;
+            margin-top: 35px !important;
         }
         .stButton > button:hover {
             background: rgba(255, 183, 77, 0.3) !important;
@@ -98,7 +99,6 @@ if "coins" not in st.session_state:
 if st.session_state.game_state == "START":
     set_bg_and_style("bg_start", is_start_screen=True)
 
-    # Đã chỉnh về 17 dòng br để kéo nút lên khớp hoàn hảo
     st.markdown("<br>" * 17, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1.1, 1.2, 1.1])
