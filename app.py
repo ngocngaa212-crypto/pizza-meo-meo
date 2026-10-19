@@ -3,7 +3,6 @@ import os
 import time
 import streamlit as st
 
-# Cấu hình trang web Streamlit
 st.set_page_config(
     page_title="Pizza Meo Meo 🐾",
     page_icon="🍕",
@@ -12,7 +11,6 @@ st.set_page_config(
 )
 
 
-# Hàm cài đặt ảnh nền giữ chuẩn tỷ lệ & nút bấm đè khớp vị trí
 def set_bg_and_style(image_base_name, is_start_screen=False):
     image_file = None
     for possible_name in [
@@ -36,19 +34,20 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
 
     button_style = ""
     if is_start_screen:
-        # Nút tàng hình đè khớp vị trí nút START GAME màu hồng
+        # Tinh chỉnh lại kích thước và padding để đè chuẩn khít nút hồng
         button_style = """
         .stButton > button {
             background: transparent !important;
-            border: 2px dashed transparent !important;
+            border: 2px dashed rgba(255, 152, 0, 0.5) !important;
             color: transparent !important;
             box-shadow: none !important;
-            height: 60px !important;
+            height: 55px !important;
             border-radius: 30px !important;
             cursor: pointer !important;
+            margin-top: -10px !important;
         }
         .stButton > button:hover {
-            background: rgba(255, 183, 77, 0.25) !important;
+            background: rgba(255, 183, 77, 0.3) !important;
             border: 2px solid #FF9800 !important;
         }
         """
@@ -66,7 +65,6 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
         }
         """
 
-    # CSS: Dùng background-size: contain giúp giữ chuẩn tỷ lệ ảnh, nền màu kem pastel che khoảng trống
     st.markdown(
         f"""
         <style>
@@ -88,7 +86,6 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
     )
 
 
-# Khởi tạo trạng thái game
 if "game_state" not in st.session_state:
     st.session_state.game_state = "START"
 if "day" not in st.session_state:
@@ -97,22 +94,22 @@ if "coins" not in st.session_state:
     st.session_state.coins = 100
 
 # ==========================================
-# MÀN HÌNH 1: START GAME (MÀN HÌNH CHÍNH)
+# MÀN HÌNH 1: START GAME
 # ==========================================
 if st.session_state.game_state == "START":
     set_bg_and_style("bg_start", is_start_screen=True)
 
-    # Đẩy nút xuống vừa đúng vị trí nút START GAME vẽ trên ảnh
-    st.markdown("<br>" * 18, unsafe_allow_html=True)
+    # Đã giảm số dòng br xuống để kéo nút dịch lên trên cho khớp
+    st.markdown("<br>" * 11, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1.1, 1.0, 1.1])
+    col1, col2, col3 = st.columns([1.2, 1.1, 1.2])
     with col2:
         if st.button("START_GAME_BTN", use_container_width=True):
             st.session_state.game_state = "PLAYING"
             st.rerun()
 
 # ==========================================
-# MÀN HÌNH 2: BẾP & LÀM BÁNH (GAMEPLAY)
+# MÀN HÌNH 2: BẾP & LÀM BÁNH
 # ==========================================
 elif st.session_state.game_state == "PLAYING":
     set_bg_and_style("bg_play")
@@ -129,12 +126,12 @@ elif st.session_state.game_state == "PLAYING":
             st.rerun()
 
 # ==========================================
-# MÀN HÌNH 3: HẾT GIỜ RỒI! (TỔNG KẾT NGÀY)
+# MÀN HÌNH 3: HẾT GIỜ RỒI!
 # ==========================================
 elif st.session_state.game_state == "SUMMARY":
-    set_bg_image = set_bg_and_style("bg_summary")
+    set_bg_and_style("bg_summary")
 
-    st.markdown("<br>" * 17, unsafe_allow_html=True)
+    st.markdown("<br>" * 16, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
