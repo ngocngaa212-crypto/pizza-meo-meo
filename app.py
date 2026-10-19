@@ -10,22 +10,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Custom CSS mô phỏng chính xác màu sắc và giao diện pastel trong ảnh
+# Custom CSS mô phỏng màu sắc pastel
 st.markdown(
     """
 <style>
-    /* Tổng thể nền pastel cam kem */
     .stApp {
         background-color: #FFF3E0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     
-    /* Ẩn bớt thanh Streamlit thừa để giống game thật */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
-    /* MÀN HÌNH START GAME */
     .start-container {
         text-align: center;
         background: linear-gradient(180deg, #FFE0B2 0%, #FFF3E0 100%);
@@ -41,7 +38,6 @@ st.markdown(
         font-size: 55px;
         font-weight: 900;
         margin-bottom: 5px;
-        text-shadow: 2px 2px #FFE0B2;
     }
     .game-subtitle {
         color: #B16A5B;
@@ -49,7 +45,6 @@ st.markdown(
         margin-bottom: 30px;
     }
     
-    /* MÀN HÌNH GAMEPLAY - HEADER TOP BAR */
     .top-bar {
         display: flex;
         justify-content: space-between;
@@ -69,16 +64,6 @@ st.markdown(
         border: 2px solid #FFB74D;
     }
 
-    /* KHÁCH HÀNG & BÓNG THOẠI */
-    .customer-row {
-        display: flex;
-        justify-content: space-around;
-        background-color: #FFF8E1;
-        padding: 15px;
-        border-radius: 20px;
-        border: 3px solid #FFE0B2;
-        margin-bottom: 20px;
-    }
     .customer-card {
         text-align: center;
         position: relative;
@@ -94,7 +79,6 @@ st.markdown(
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
     }
 
-    /* ĐƠN HÀNG BÊN TRÁI */
     .order-card {
         background-color: #FFF8E1;
         border: 3px dashed #FFB74D;
@@ -103,38 +87,18 @@ st.markdown(
         color: #5D4037;
     }
 
-    /* QUẦY BẾP & NGUYÊN LIỆU */
-    .kitchen-counter {
-        background-color: #D7CCC8;
-        border-radius: 20px;
-        padding: 15px;
-        border: 4px solid #A1887F;
+    /* KHU VỰC BÁNH PIZZA - CSS ĐÃ ĐƯỢC CHỈNH CHUẨN */
+    .pizza-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 15px 0;
     }
-    .ingredient-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        background-color: #BCAAA4;
-        padding: 12px;
-        border-radius: 15px;
-    }
-    .ingredient-box {
-        background-color: #EFEBE9;
-        border: 2px solid #8D6E63;
-        border-radius: 12px;
-        padding: 10px;
-        text-align: center;
-        font-weight: bold;
-        color: #4E342E;
-    }
-
-    /* PIZZA VẼ TRÊN THỚT */
     .pizza-board {
         background-color: #D7CCC8;
         border-radius: 50%;
         width: 220px;
         height: 220px;
-        margin: 0 auto;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -173,7 +137,6 @@ st.markdown(
         transform: translate(-50%, -50%);
     }
 
-    /* MÀN HÌNH TỔNG KẾT HẾT GIỜ */
     .summary-card {
         background-color: #FFF8E1;
         border: 4px solid #FFB74D;
@@ -253,7 +216,7 @@ TOPPING_POSITIONS = [
 
 # --- QUẢN LÝ TRẠNG THÁI (STATE) ---
 if "game_state" not in st.session_state:
-    st.session_state.game_state = "START"  # START, PLAYING, SUMMARY
+    st.session_state.game_state = "START"
 if "day" not in st.session_state:
     st.session_state.day = 3
 if "coins" not in st.session_state:
@@ -284,7 +247,6 @@ def reset_day():
     st.session_state.customers_served = 0
     st.session_state.correct_orders = 0
     st.session_state.reviews = []
-    # Tạo hàng đợi 4 khách hàng
     st.session_state.queue = []
     for cat in ALL_CATS:
         num_t = random.randint(2, 3)
@@ -342,7 +304,6 @@ if st.session_state.game_state == "START":
 # 2. MÀN HÌNH GAMEPLAY (BẾP & LÀM BÁNH)
 # ==========================================
 elif st.session_state.game_state == "PLAYING":
-    # 2.1 Thanh trạng thái trên cùng
     st.markdown(
         f"""
     <div class="top-bar">
@@ -354,7 +315,6 @@ elif st.session_state.game_state == "PLAYING":
         unsafe_allow_html=True,
     )
 
-    # 2.2 Hàng khách hàng mèo xếp hàng
     st.markdown("### 🐾 Hàng Khách Hàng Đang Chờ")
     cat_cols = st.columns(4)
 
@@ -387,9 +347,7 @@ elif st.session_state.game_state == "PLAYING":
 
     st.markdown("---")
 
-    # 2.3 Khu vực làm bánh chính (Cột trái: Đơn hàng, Cột phải: Bếp)
     col_order, col_kitchen = st.columns([1, 2])
-
     current_customer = st.session_state.queue[0] if st.session_state.queue else None
 
     with col_order:
@@ -420,20 +378,12 @@ elif st.session_state.game_state == "PLAYING":
     with col_kitchen:
         st.markdown("### 🧑‍🍳 Quầy Bếp Làm Bánh")
 
-        # Hiển thị bánh pizza trực quan trên thớt
         cur_p = st.session_state.current_pizza
-        sauce_bg = (
-            'class="pizza-sauce"'
-            if cur_p["sauce"]
-            else 'style="background:transparent;"'
-        )
-        cheese_bg = (
-            'class="pizza-cheese"'
-            if cur_p["cheese"]
-            else 'style="background:transparent;"'
-        )
 
-        # Tạo topping html rải rác
+        # Lắp ráp HTML Bánh Pizza (Đã kiểm tra kỹ cấu trúc thẻ)
+        sauce_style = "pizza-sauce" if cur_p["sauce"] else ""
+        cheese_style = "pizza-cheese" if cur_p["cheese"] else ""
+
         topping_htmls = []
         pos_i = 0
         for t in cur_p["toppings"]:
@@ -445,13 +395,18 @@ elif st.session_state.game_state == "PLAYING":
                 )
                 pos_i += 2
 
+        all_toppings_str = "".join(topping_htmls)
+
+        # Hiển thị bánh Pizza không bị lỗi div thừa
         st.markdown(
             f"""
-        <div class="pizza-board">
-            <div class="pizza-crust">
-                <div {sauce_bg}>
-                    <div {cheese_bg}>
-                        {''.join(topping_htmls)}
+        <div class="pizza-container">
+            <div class="pizza-board">
+                <div class="pizza-crust">
+                    <div class="{sauce_style}">
+                        <div class="{cheese_style}">
+                            {all_toppings_str}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -462,7 +417,6 @@ elif st.session_state.game_state == "PLAYING":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Quầy 8 khay nguyên liệu bấm chọn
         st.write("<b>Chạm vào nguyên liệu để thêm vào bánh:</b>", unsafe_allow_html=True)
 
         g_col1, g_col2, g_col3, g_col4 = st.columns(4)
@@ -521,7 +475,6 @@ elif st.session_state.game_state == "PLAYING":
                 type="primary",
                 use_container_width=True,
             ):
-                # Xử lý chấm điểm bánh
                 target = current_customer["order"]
                 correct = True
                 stars = 5
@@ -549,7 +502,6 @@ elif st.session_state.game_state == "PLAYING":
                 if correct:
                     st.session_state.correct_orders += 1
 
-                # Lưu đánh giá
                 st.session_state.reviews.append(
                     {
                         "name": current_customer["cat"]["name"],
@@ -559,11 +511,9 @@ elif st.session_state.game_state == "PLAYING":
                     }
                 )
 
-                # Chuyển sang khách tiếp theo
                 st.session_state.queue.pop(0)
                 reset_pizza()
 
-                # Nếu hết khách -> Sang màn hình Tổng kết
                 if not st.session_state.queue:
                     st.session_state.game_state = "SUMMARY"
 
