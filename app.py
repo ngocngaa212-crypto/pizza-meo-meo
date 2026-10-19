@@ -2,56 +2,159 @@ import random
 import time
 import streamlit as st
 
-# Cấu hình trang web
+# Cấu hình trang web Streamlit
 st.set_page_config(
     page_title="Pizza Meo Meo 🐾",
     page_icon="🍕",
-    layout="centered",
-    initial_sidebar_state="expanded",
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
-# Custom CSS cho phong cách mèo & hiệu ứng bánh Pizza
+# Custom CSS mô phỏng chính xác màu sắc và giao diện pastel trong ảnh
 st.markdown(
     """
 <style>
+    /* Tổng thể nền pastel cam kem */
     .stApp {
-        background-color: #FFF9F0;
+        background-color: #FFF3E0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    .cat-card {
-        background-color: #FFEED9;
-        padding: 15px;
-        border-radius: 15px;
-        border: 2px solid #FFC09F;
+    
+    /* Ẩn bớt thanh Streamlit thừa để giống game thật */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
+    /* MÀN HÌNH START GAME */
+    .start-container {
+        text-align: center;
+        background: linear-gradient(180deg, #FFE0B2 0%, #FFF3E0 100%);
+        padding: 50px 20px;
+        border-radius: 25px;
+        border: 4px solid #FFB74D;
+        margin: 20px auto;
+        max-width: 800px;
+        box-shadow: 0 10px 25px rgba(255, 152, 0, 0.2);
+    }
+    .game-title {
+        color: #8D4B38;
+        font-size: 55px;
+        font-weight: 900;
+        margin-bottom: 5px;
+        text-shadow: 2px 2px #FFE0B2;
+    }
+    .game-subtitle {
+        color: #B16A5B;
+        font-size: 20px;
+        margin-bottom: 30px;
+    }
+    
+    /* MÀN HÌNH GAMEPLAY - HEADER TOP BAR */
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #FFE0B2;
+        padding: 10px 25px;
+        border-radius: 20px;
+        border: 3px solid #FFB74D;
         margin-bottom: 15px;
     }
-    .pizza-plate {
-        background-color: #E8D8C8;
-        border-radius: 50%;
+    .top-badge {
+        background-color: #FFF;
+        padding: 6px 16px;
+        border-radius: 15px;
+        font-weight: bold;
+        color: #8D4B38;
+        border: 2px solid #FFB74D;
+    }
+
+    /* KHÁCH HÀNG & BÓNG THOẠI */
+    .customer-row {
+        display: flex;
+        justify-content: space-around;
+        background-color: #FFF8E1;
+        padding: 15px;
+        border-radius: 20px;
+        border: 3px solid #FFE0B2;
+        margin-bottom: 20px;
+    }
+    .customer-card {
+        text-align: center;
+        position: relative;
+    }
+    .speech-bubble {
+        background-color: #FFFFFF;
+        border: 2px solid #8D4B38;
+        border-radius: 15px;
+        padding: 8px 12px;
+        font-size: 13px;
+        margin-bottom: 8px;
+        position: relative;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    /* ĐƠN HÀNG BÊN TRÁI */
+    .order-card {
+        background-color: #FFF8E1;
+        border: 3px dashed #FFB74D;
+        border-radius: 20px;
         padding: 20px;
+        color: #5D4037;
+    }
+
+    /* QUẦY BẾP & NGUYÊN LIỆU */
+    .kitchen-counter {
+        background-color: #D7CCC8;
+        border-radius: 20px;
+        padding: 15px;
+        border: 4px solid #A1887F;
+    }
+    .ingredient-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        background-color: #BCAAA4;
+        padding: 12px;
+        border-radius: 15px;
+    }
+    .ingredient-box {
+        background-color: #EFEBE9;
+        border: 2px solid #8D6E63;
+        border-radius: 12px;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        color: #4E342E;
+    }
+
+    /* PIZZA VẼ TRÊN THỚT */
+    .pizza-board {
+        background-color: #D7CCC8;
+        border-radius: 50%;
+        width: 220px;
+        height: 220px;
+        margin: 0 auto;
         display: flex;
         justify-content: center;
         align-items: center;
-        border: 4px dashed #B08968;
-        width: 320px;
-        height: 320px;
-        margin: 0 auto;
+        border: 5px solid #8D6E63;
     }
     .pizza-crust {
         background-color: #E6A15C;
         border-radius: 50%;
-        width: 280px;
-        height: 280px;
+        width: 190px;
+        height: 190px;
         display: flex;
         justify-content: center;
         align-items: center;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
         position: relative;
     }
     .pizza-sauce {
         background-color: #D64045;
         border-radius: 50%;
-        width: 230px;
-        height: 230px;
+        width: 155px;
+        height: 155px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -60,44 +163,79 @@ st.markdown(
     .pizza-cheese {
         background-color: #FFD166;
         border-radius: 50%;
-        width: 190px;
-        height: 190px;
+        width: 125px;
+        height: 125px;
         position: relative;
-        overflow: hidden;
     }
     .topping-item {
         position: absolute;
-        font-size: 20px;
-        user-select: none;
+        font-size: 18px;
         transform: translate(-50%, -50%);
+    }
+
+    /* MÀN HÌNH TỔNG KẾT HẾT GIỜ */
+    .summary-card {
+        background-color: #FFF8E1;
+        border: 4px solid #FFB74D;
+        border-radius: 25px;
+        padding: 30px;
+        max-width: 850px;
+        margin: 20px auto;
+    }
+    .summary-header {
+        text-align: center;
+        color: #8D4B38;
+        font-size: 38px;
+        font-weight: bold;
+    }
+    .metric-container {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+    }
+    .metric-box {
+        background-color: #FFF;
+        border: 2px solid #FFE0B2;
+        padding: 15px 25px;
+        border-radius: 18px;
+        text-align: center;
+        font-weight: bold;
+    }
+    .review-item {
+        background-color: #FFFFFF;
+        border-radius: 12px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
-# --- KHỞI TẠO NGUYÊN LIỆU ---
+# --- KHỞI TẠO NGUYÊN LIỆU & KHÁCH HÀNG ---
 INGREDIENTS = {
-    "sauce": {"Sốt Cà Chua 🍅": "🍅"},
-    "cheese": {"Phô Mai 🧀": "🧀"},
+    "sauce": {"Sốt cà chua 🥫": "🍅"},
+    "cheese": {"Phô mai 🧀": "🧀"},
     "toppings": {
         "Xúc xích 🥓": "🥓",
+        "Thịt xông khói 🍖": "🍖",
         "Nấm 🍄": "🍄",
         "Ớt chuông 🫑": "🫑",
-        "Thịt xông khói 🍖": "🍖",
         "Ô liu 🫒": "🫒",
+        "Dứa 🍍": "🍍",
     },
 }
 
-CAT_CUSTOMERS = [
-    {"name": "Mèo Béo Miu Miu 🐱", "avatar": "🐱", "personality": "Thèm ăn"},
-    {"name": "Tiểu Mộc Mèo 😸", "avatar": "😸", "personality": "Vui vẻ"},
-    {"name": "Quý Bà Hoàng Gia 😺", "avatar": "😺", "personality": "Khó tính"},
-    {"name": "Mèo Mập Mập 😸", "avatar": "😸", "personality": "Dễ tính"},
-    {"name": "Hoàng Tử Mèo 🐈‍⬛", "avatar": "🐈‍⬛", "personality": "Sang chảnh"},
+ALL_CATS = [
+    {"name": "Miu Cam", "avatar": "🐱"},
+    {"name": "Mun Mun", "avatar": "🐈‍⬛"},
+    {"name": "Bánh Bao", "avatar": "😸"},
+    {"name": "Đốm Sữa", "avatar": "😺"},
 ]
 
-# Tọa độ ngẫu nhiên cố định tương đối quanh hình tròn bánh (bán kính <= 40%)
 TOPPING_POSITIONS = [
     (50, 50),
     (30, 30),
@@ -108,183 +246,212 @@ TOPPING_POSITIONS = [
     (25, 50),
     (75, 50),
     (50, 75),
-    (38, 40),
-    (62, 40),
-    (40, 62),
-    (60, 62),
+    (40, 40),
+    (60, 40),
+    (40, 60),
 ]
 
-# --- QUẢN LÝ STATE ---
+# --- QUẢN LÝ TRẠNG THÁI (STATE) ---
+if "game_state" not in st.session_state:
+    st.session_state.game_state = "START"  # START, PLAYING, SUMMARY
 if "day" not in st.session_state:
-    st.session_state.day = 1
-if "total_money" not in st.session_state:
-    st.session_state.total_money = 0
-if "day_money" not in st.session_state:
-    st.session_state.day_money = 0
+    st.session_state.day = 3
+if "coins" not in st.session_state:
+    st.session_state.coins = 100
+if "day_coins" not in st.session_state:
+    st.session_state.day_coins = 0
+if "satisfaction" not in st.session_state:
+    st.session_state.satisfaction = 88
 if "customers_served" not in st.session_state:
     st.session_state.customers_served = 0
-if "day_customers" not in st.session_state:
-    st.session_state.day_customers = 0
-if "satisfaction_scores" not in st.session_state:
-    st.session_state.satisfaction_scores = []
-if "current_customer" not in st.session_state:
-    st.session_state.current_customer = None
-if "current_order" not in st.session_state:
-    st.session_state.current_order = None
-if "day_ended" not in st.session_state:
-    st.session_state.day_ended = False
-
-MAX_CUSTOMERS_PER_DAY = 3
-
-
-# --- HÀM TẠO ĐƠN HÀNG MỚI ---
-def generate_new_customer():
-    cat = random.choice(CAT_CUSTOMERS)
-    num_toppings = random.randint(2, 4)
-    chosen_toppings = random.sample(
-        list(INGREDIENTS["toppings"].keys()), num_toppings
-    )
-
-    st.session_state.current_customer = cat
-    st.session_state.current_order = {
-        "sauce": True,
-        "cheese": True,
-        "toppings": chosen_toppings,
+if "correct_orders" not in st.session_state:
+    st.session_state.correct_orders = 0
+if "reviews" not in st.session_state:
+    st.session_state.reviews = []
+if "queue" not in st.session_state:
+    st.session_state.queue = []
+if "current_pizza" not in st.session_state:
+    st.session_state.current_pizza = {
+        "dough": True,
+        "sauce": False,
+        "cheese": False,
+        "toppings": [],
     }
 
 
-if (
-    st.session_state.current_customer is None
-    and not st.session_state.day_ended
-):
-    generate_new_customer()
+def reset_day():
+    st.session_state.day_coins = 0
+    st.session_state.customers_served = 0
+    st.session_state.correct_orders = 0
+    st.session_state.reviews = []
+    # Tạo hàng đợi 4 khách hàng
+    st.session_state.queue = []
+    for cat in ALL_CATS:
+        num_t = random.randint(2, 3)
+        toppings = random.sample(
+            list(INGREDIENTS["toppings"].keys()), num_t
+        )
+        st.session_state.queue.append(
+            {
+                "cat": cat,
+                "order": {
+                    "sauce": True,
+                    "cheese": True,
+                    "toppings": toppings,
+                },
+            }
+        )
+    reset_pizza()
 
-# --- TIÊU ĐỀ KHU VỰC ---
-st.title("🍕 Pizza Meo Meo – Tiệm Pizza Trong Thế Giới Mèo 🐾")
 
-# Sidebar - Thống kê quán
-st.sidebar.header("📊 Thông Tin Tiệm Bánh")
-st.sidebar.markdown(f"🗓️ **Ngày làm việc:** {st.session_state.day}")
-st.sidebar.markdown(f"💰 **Tổng doanh thu:** {st.session_state.total_money}$")
-st.sidebar.markdown(
-    f"👥 **Tổng khách đã phục vụ:** {st.session_state.customers_served}"
-)
-st.sidebar.markdown("---")
+def reset_pizza():
+    st.session_state.current_pizza = {
+        "dough": True,
+        "sauce": False,
+        "cheese": False,
+        "toppings": [],
+    }
 
-if st.sidebar.button("Làm lại từ đầu 🔄"):
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.rerun()
 
-# --- MÀN HÌNH TỔNG KẾT CUỐI NGÀY ---
-if st.session_state.day_ended:
-    st.balloons()
-    st.markdown("## 🌙 Cửa hàng đóng cửa! Tổng kết Ngày " + str(st.session_state.day))
-
-    avg_sat = (
-        sum(st.session_state.satisfaction_scores)
-        / len(st.session_state.satisfaction_scores)
-        if st.session_state.satisfaction_scores
-        else 0
-    )
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("💵 Doanh thu hôm nay", f"{st.session_state.day_money}$")
-    col2.metric("🐾 Số khách phục vụ", f"{st.session_state.day_customers}")
-    col3.metric("❤️ Độ hài lòng TB", f"{avg_sat:.1f}/100")
-
-    st.success(
-        f"Bạn đã hoàn thành tuyệt vời Ngày {st.session_state.day}! Hãy nghỉ ngơi để chuẩn bị cho ngày tiếp theo."
-    )
-
-    if st.button("Mở cửa Ngày Tiếp Theo ☀️"):
-        st.session_state.day += 1
-        st.session_state.day_money = 0
-        st.session_state.day_customers = 0
-        st.session_state.day_ended = False
-        generate_new_customer()
-        st.rerun()
-
-else:
-    # --- MÀN HÌNH CHƠI GAME HÀNG NGÀY ---
-    customer = st.session_state.current_customer
-    order = st.session_state.current_order
-
-    # 1. Khách hàng giao đơn
+# ==========================================
+# 1. MÀN HÌNH CHÍNH (START GAME)
+# ==========================================
+if st.session_state.game_state == "START":
     st.markdown(
-        f"""
-    <div class="cat-card">
-        <h3>{customer['avatar']} Khách hàng: {customer['name']} ({customer['personality']})</h3>
-        <p><i>"Meo meo! Tôi muốn một chiếc pizza nóng hổi có:"</i></p>
-        <ul>
-            <li><b>Đế bánh + Sốt Cà Chua 🍅 + Phô Mai 🧀</b></li>
-            <li><b>Topping:</b> {', '.join(order['toppings'])}</li>
-        </ul>
+        """
+    <div class="start-container">
+        <div style="font-size: 80px;">🐱🍕</div>
+        <div class="game-title">Pizza Meo Meo</div>
+        <div class="game-subtitle">🐾 Tiệm pizza của những chú mèo~ 🐾</div>
+        <p>Chào mừng bạn đến với tiệm pizza dễ thương nhất thế giới mèo!</p>
     </div>
     """,
         unsafe_allow_html=True,
     )
 
-    st.caption(
-        f"Khách hàng thứ {st.session_state.day_customers + 1}/{MAX_CUSTOMERS_PER_DAY} trong Ngày {st.session_state.day}"
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button(
+            "🐾 START GAME 🐾", use_container_width=True, type="primary"
+        ):
+            reset_day()
+            st.session_state.game_state = "PLAYING"
+            st.rerun()
+
+# ==========================================
+# 2. MÀN HÌNH GAMEPLAY (BẾP & LÀM BÁNH)
+# ==========================================
+elif st.session_state.game_state == "PLAYING":
+    # 2.1 Thanh trạng thái trên cùng
+    st.markdown(
+        f"""
+    <div class="top-bar">
+        <div class="top-badge">📅 Ngày {st.session_state.day} - 12:45</div>
+        <div class="top-badge">😊 {st.session_state.satisfaction}% Hài lòng</div>
+        <div class="top-badge">🪙 {st.session_state.coins} xu</div>
+    </div>
+    """,
+        unsafe_allow_html=True,
     )
 
-    # 2. Khay chọn nguyên liệu
-    st.markdown("### 🧑‍🍳 Khay Nguyên Liệu Bếp")
+    # 2.2 Hàng khách hàng mèo xếp hàng
+    st.markdown("### 🐾 Hàng Khách Hàng Đang Chờ")
+    cat_cols = st.columns(4)
 
-    col_base, col_top = st.columns([1, 1])
+    for idx, item in enumerate(st.session_state.queue):
+        cat_info = item["cat"]
+        order_info = item["order"]
+        is_current = idx == 0
 
-    with col_base:
-        st.subheader("1. Cơ bản")
-        has_dough = st.checkbox("Bột nhào (Đế bánh) 🫓", value=True)
-        has_sauce = st.checkbox("Sốt Cà Chua 🍅", value=True)
-        has_cheese = st.checkbox("Phô Mai 🧀", value=True)
+        with cat_cols[idx]:
+            border_style = (
+                "border: 3px solid #FF9800; background-color: #FFF3E0;"
+                if is_current
+                else "opacity: 0.7;"
+            )
+            top_emojis = " ".join(
+                [INGREDIENTS["toppings"][t] for t in order_info["toppings"]]
+            )
 
-    with col_top:
-        st.subheader("2. Khay Topping")
-        selected_toppings = []
-        for top_name, emoji in INGREDIENTS["toppings"].items():
-            if st.checkbox(f"{top_name}"):
-                selected_toppings.append(top_name)
+            st.markdown(
+                f"""
+            <div class="customer-card" style="{border_style} padding: 10px; border-radius: 15px;">
+                <div class="speech-bubble">🍕 {top_emojis}</div>
+                <div style="font-size: 40px;">{cat_info['avatar']}</div>
+                <b>{cat_info['name']}</b>
+                {'<br><small style="color:#FF9800;">(Đang phục vụ)</small>' if is_current else ''}
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
 
-    # 3. Hiển thị chiếc Pizza thực tế với Topping rải đều
-    st.markdown("### 🍕 Chiếc Pizza Của Bạn:")
+    st.markdown("---")
 
-    # Tạo HTML cho topping rải rác xung quanh
-    topping_elements = []
-    if selected_toppings and has_cheese:
-        pos_idx = 0
-        # Mỗi loại topping được chọn sẽ đặt 4-5 miếng ở các vị trí khác nhau
-        for t in selected_toppings:
+    # 2.3 Khu vực làm bánh chính (Cột trái: Đơn hàng, Cột phải: Bếp)
+    col_order, col_kitchen = st.columns([1, 2])
+
+    current_customer = st.session_state.queue[0] if st.session_state.queue else None
+
+    with col_order:
+        if current_customer:
+            c_name = current_customer["cat"]["name"]
+            c_order = current_customer["order"]
+            toppings_list_html = "".join(
+                [f"<li>{t}</li>" for t in c_order["toppings"]]
+            )
+
+            st.markdown(
+                f"""
+            <div class="order-card">
+                <h3>📋 Đơn hàng hiện tại</h3>
+                <h4>🐱 Khách hàng: {c_name}</h4>
+                <p><b>Pizza yêu cầu:</b></p>
+                <ul>
+                    <li>Đế bánh</li>
+                    <li>Sốt cà chua</li>
+                    <li>Phô mai</li>
+                    {toppings_list_html}
+                </ul>
+            </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+    with col_kitchen:
+        st.markdown("### 🧑‍🍳 Quầy Bếp Làm Bánh")
+
+        # Hiển thị bánh pizza trực quan trên thớt
+        cur_p = st.session_state.current_pizza
+        sauce_bg = (
+            'class="pizza-sauce"'
+            if cur_p["sauce"]
+            else 'style="background:transparent;"'
+        )
+        cheese_bg = (
+            'class="pizza-cheese"'
+            if cur_p["cheese"]
+            else 'style="background:transparent;"'
+        )
+
+        # Tạo topping html rải rác
+        topping_htmls = []
+        pos_i = 0
+        for t in cur_p["toppings"]:
             emoji = INGREDIENTS["toppings"][t]
-            for _ in range(4):
-                top_percent, left_percent = TOPPING_POSITIONS[
-                    pos_idx % len(TOPPING_POSITIONS)
-                ]
-                topping_elements.append(
-                    f'<span class="topping-item" style="top:{top_percent}%; left:{left_percent}%;">{emoji}</span>'
+            for _ in range(3):
+                top_p, left_p = TOPPING_POSITIONS[pos_i % len(TOPPING_POSITIONS)]
+                topping_htmls.append(
+                    f'<span class="topping-item" style="top:{top_p}%; left:{left_p}%;">{emoji}</span>'
                 )
-                pos_idx += 3
+                pos_i += 2
 
-    pizza_toppings_html = "".join(topping_elements)
-
-    sauce_style = (
-        'class="pizza-sauce"' if has_sauce else 'style="background:transparent;"'
-    )
-    cheese_style = (
-        'class="pizza-cheese"'
-        if has_cheese
-        else 'style="background:transparent;"'
-    )
-
-    if has_dough:
         st.markdown(
             f"""
-        <div class="pizza-plate">
+        <div class="pizza-board">
             <div class="pizza-crust">
-                <div {sauce_style}>
-                    <div {cheese_style}>
-                        {pizza_toppings_html}
+                <div {sauce_bg}>
+                    <div {cheese_bg}>
+                        {''.join(topping_htmls)}
                     </div>
                 </div>
             </div>
@@ -292,77 +459,175 @@ else:
         """,
             unsafe_allow_html=True,
         )
-    else:
-        st.warning("⚠️ Bạn chưa chuẩn bị Bột nhào (Đế bánh)!")
 
-    # 4. Nướng và Giao bánh
-    st.markdown("---")
-    if st.button("🔥 Đưa Vào Lò Nướng & Giao Cho Khách 🐾"):
-        if not has_dough:
-            st.error("❌ Không thể nướng pizza mà không có đế bánh!")
-        else:
-            with st.spinner("🔥 Đang nướng pizza trong lò nướng thơm lừng..."):
-                time.sleep(1.8)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-            score = 100
-            reasons = []
+        # Quầy 8 khay nguyên liệu bấm chọn
+        st.write("<b>Chạm vào nguyên liệu để thêm vào bánh:</b>", unsafe_allow_html=True)
 
-            if not has_sauce:
-                score -= 25
-                reasons.append("Thiếu sốt cà chua")
-            if not has_cheese:
-                score -= 25
-                reasons.append("Thiếu phô mai")
+        g_col1, g_col2, g_col3, g_col4 = st.columns(4)
 
-            target_toppings = set(order["toppings"])
-            user_toppings = set(selected_toppings)
+        with g_col1:
+            if st.button(
+                "🍅 Sốt cà chua",
+                use_container_width=True,
+                disabled=cur_p["sauce"],
+            ):
+                cur_p["sauce"] = True
+                st.rerun()
+            if st.button("🍄 Nấm", use_container_width=True):
+                cur_p["toppings"].append("Nấm 🍄")
+                st.rerun()
 
-            missing = target_toppings - user_toppings
-            extra = user_toppings - target_toppings
+        with g_col2:
+            if st.button(
+                "🧀 Phô mai",
+                use_container_width=True,
+                disabled=cur_p["cheese"],
+            ):
+                cur_p["cheese"] = True
+                st.rerun()
+            if st.button("🫑 Ớt chuông", use_container_width=True):
+                cur_p["toppings"].append("Ớt chuông 🫑")
+                st.rerun()
 
-            if missing:
-                score -= len(missing) * 15
-                reasons.append(f"Thiếu: {', '.join(missing)}")
-            if extra:
-                score -= len(extra) * 10
-                reasons.append(
-                    f"Thừa nguyên liệu khách không gọi: {', '.join(extra)}"
+        with g_col3:
+            if st.button("🥓 Xúc xích", use_container_width=True):
+                cur_p["toppings"].append("Xúc xích 🥓")
+                st.rerun()
+            if st.button("🫒 Ô liu", use_container_width=True):
+                cur_p["toppings"].append("Ô liu 🫒")
+                st.rerun()
+
+        with g_col4:
+            if st.button("🍖 Thịt xông khói", use_container_width=True):
+                cur_p["toppings"].append("Thịt xông khói 🍖")
+                st.rerun()
+            if st.button("🍍 Dứa", use_container_width=True):
+                cur_p["toppings"].append("Dứa 🍍")
+                st.rerun()
+
+        st.markdown("---")
+
+        btn_col1, btn_col2 = st.columns(2)
+        with btn_col1:
+            if st.button("🧹 Làm lại bánh mới", use_container_width=True):
+                reset_pizza()
+                st.rerun()
+
+        with btn_col2:
+            if st.button(
+                "🔥 Đưa vào Lò Nướng & Giao Bánh 🔥",
+                type="primary",
+                use_container_width=True,
+            ):
+                # Xử lý chấm điểm bánh
+                target = current_customer["order"]
+                correct = True
+                stars = 5
+                comment = "Tuyệt vời! Đúng chiếc bánh tôi muốn!"
+
+                if not cur_p["sauce"] or not cur_p["cheese"]:
+                    correct = False
+                    stars -= 2
+
+                set_target = set(target["toppings"])
+                set_user = set(cur_p["toppings"])
+
+                if set_target != set_user:
+                    correct = False
+                    stars -= 1
+                    comment = "Khá ngon, nhưng vẫn thiếu/sai chút gì đó!"
+
+                if stars < 3:
+                    comment = "Cũng được, lần sau hãy chú ý đơn hàng nhé!"
+
+                earned = 100 if correct else 60
+                st.session_state.coins += earned
+                st.session_state.day_coins += earned
+                st.session_state.customers_served += 1
+                if correct:
+                    st.session_state.correct_orders += 1
+
+                # Lưu đánh giá
+                st.session_state.reviews.append(
+                    {
+                        "name": current_customer["cat"]["name"],
+                        "avatar": current_customer["cat"]["avatar"],
+                        "stars": "⭐" * stars,
+                        "comment": comment,
+                    }
                 )
 
-            score = max(0, score)
+                # Chuyển sang khách tiếp theo
+                st.session_state.queue.pop(0)
+                reset_pizza()
 
-            base_pay = 20
-            tip = int((score / 100) * 15)
-            earned_money = base_pay + tip if score >= 50 else 5
+                # Nếu hết khách -> Sang màn hình Tổng kết
+                if not st.session_state.queue:
+                    st.session_state.game_state = "SUMMARY"
 
-            st.session_state.day_money += earned_money
-            st.session_state.total_money += earned_money
-            st.session_state.day_customers += 1
-            st.session_state.customers_served += 1
-            st.session_state.satisfaction_scores.append(score)
+                st.rerun()
 
-            st.markdown("### 📝 Đánh Giá Của Khách Hàng:")
-            if score == 100:
-                st.balloons()
-                st.success(
-                    f"🎉 {customer['name']}: 'Meo meo! Tuyệt vời hoàn hảo! Đúng vị tôi thích!' (+{earned_money}$)"
-                )
-            elif score >= 70:
-                st.info(
-                    f"😊 {customer['name']}: 'Khá ngon! Lần sau nhớ làm cẩn thận hơn nhé!' (+{earned_money}$)"
-                )
-            else:
-                st.error(
-                    f"😿 {customer['name']}: 'Bánh sai nhiều quá... Meo meo thất vọng!' (+{earned_money}$)"
-                )
+# ==========================================
+# 3. MÀN HÌNH TỔNG KẾT (HẾT GIỜ RỒI!)
+# ==========================================
+elif st.session_state.game_state == "SUMMARY":
+    st.balloons()
+    st.markdown(
+        f"""
+    <div class="summary-card">
+        <div class="summary-header">🐱 HẾT GIỜ RỒI! 🐾</div>
+        <p style="text-align:center;">Tiệm Pizza Meo Meo đã kết thúc ngày hôm nay!</p>
+        <h4 style="text-align:center; color:#FF9800;">🐾 Tổng kết ngày {st.session_state.day} 🐾</h4>
+        
+        <div class="metric-container">
+            <div class="metric-box">
+                <div>💰 Tổng doanh thu</div>
+                <div style="font-size:24px; color:#E65100;">{st.session_state.day_coins} xu</div>
+            </div>
+            <div class="metric-box">
+                <div>🐾 Khách đã phục vụ</div>
+                <div style="font-size:24px; color:#E65100;">{st.session_state.customers_served} / 4</div>
+            </div>
+            <div class="metric-box">
+                <div>⭐ Đơn chính xác</div>
+                <div style="font-size:24px; color:#E65100;">{st.session_state.correct_orders} / 4</div>
+            </div>
+        </div>
 
-            if reasons:
-                st.caption("Chi tiết: " + "; ".join(reasons))
+        <h4 style="color:#8D4B38;">💬 Đánh giá của khách hàng:</h4>
+    """,
+        unsafe_allow_html=True,
+    )
 
-            if st.session_state.day_customers >= MAX_CUSTOMERS_PER_DAY:
-                st.session_state.day_ended = True
-            else:
-                generate_new_customer()
+    for rev in st.session_state.reviews:
+        st.markdown(
+            f"""
+        <div class="review-item">
+            <div><b>{rev['avatar']} {rev['name']}</b></div>
+            <div style="color:#FFB300;">{rev['stars']}</div>
+            <div><i>"{rev['comment']}"</i></div>
+        </div>
+        """,
+            unsafe_allow_html=True,
+        )
 
-            time.sleep(1)
-            st.button("Tiếp tục 🐾")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button(
+            "🌻 BẮT ĐẦU NGÀY MỚI",
+            type="primary",
+            use_container_width=True,
+        ):
+            st.session_state.day += 1
+            reset_day()
+            st.session_state.game_state = "PLAYING"
+            st.rerun()
+
+    with col2:
+        if st.button("🏠 Về màn hình chính", use_container_width=True):
+            st.session_state.game_state = "START"
+            st.rerun()
