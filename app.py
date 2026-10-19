@@ -41,7 +41,7 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
             border: 2px dashed rgba(255, 152, 0, 0.6) !important;
             color: transparent !important;
             box-shadow: none !important;
-            height: 60px !important;
+            height: 58px !important;
             border-radius: 30px !important;
             cursor: pointer !important;
         }
@@ -98,8 +98,8 @@ if "coins" not in st.session_state:
 if st.session_state.game_state == "START":
     set_bg_and_style("bg_start", is_start_screen=True)
 
-    # Tăng số lượng br để đẩy nút rớt xuống đúng vị trí nút START GAME phía dưới
-    st.markdown("<br>" * 19, unsafe_allow_html=True)
+    # Đã chỉnh về 17 dòng br để kéo nút lên khớp hoàn hảo
+    st.markdown("<br>" * 17, unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns([1.1, 1.2, 1.1])
     with col2:
