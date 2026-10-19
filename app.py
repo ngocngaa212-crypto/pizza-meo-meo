@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS cho phong cách mèo & màu sắc ấm áp (Đã loại bỏ tham số gây lỗi)
+# Custom CSS cho phong cách mèo & màu sắc ấm áp
 st.markdown(
     """
 <style>
@@ -62,7 +62,8 @@ st.markdown(
         font-size: 22px;
     }
 </style>
-"""
+""",
+    unsafe_allow_html=True,
 )
 
 # --- KHỞI TẠO NGUYÊN LIỆU ---
@@ -193,7 +194,8 @@ else:
             <li><b>Topping:</b> {', '.join(order['toppings'])}</li>
         </ul>
     </div>
-    """
+    """,
+        unsafe_allow_html=True,
     )
 
     st.caption(
@@ -247,7 +249,8 @@ else:
                 </div>
             </div>
         </div>
-        """
+        """,
+            unsafe_allow_html=True,
         )
     else:
         st.warning("⚠️ Bạn chưa chuẩn bị Bột nhào (Đế bánh)!")
@@ -282,7 +285,9 @@ else:
                 reasons.append(f"Thiếu: {', '.join(missing)}")
             if extra:
                 score -= len(extra) * 10
-                reasons.append(f"Thừa nguyên liệu khách không gọi: {', '.join(extra)}")
+                reasons.append(
+                    f"Thừa nguyên liệu khách không gọi: {', '.join(extra)}"
+                )
 
             score = max(0, score)
 
