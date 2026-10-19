@@ -34,17 +34,17 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
 
     button_style = ""
     if is_start_screen:
-        # Căn chỉnh margin-top để kéo nút xuống chính xác
+        # Căn chỉnh margin-top xuống 42px và tăng chiều cao lên 62px
         button_style = """
         .stButton > button {
             background: transparent !important;
             border: 2px dashed rgba(255, 152, 0, 0.6) !important;
             color: transparent !important;
             box-shadow: none !important;
-            height: 60px !important;
-            border-radius: 30px !important;
+            height: 62px !important;
+            border-radius: 31px !important;
             cursor: pointer !important;
-            margin-top: 35px !important;
+            margin-top: 42px !important;
         }
         .stButton > button:hover {
             background: rgba(255, 183, 77, 0.3) !important;
@@ -101,7 +101,8 @@ if st.session_state.game_state == "START":
 
     st.markdown("<br>" * 17, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1.1, 1.2, 1.1])
+    # Đổi tỉ lệ cột từ [1.1, 1.2, 1.1] thành [1.0, 1.3, 1.0] để nút rộng hơn ngang ra hai bên
+    col1, col2, col3 = st.columns([1.0, 1.3, 1.0])
     with col2:
         if st.button("START_GAME_BTN", use_container_width=True):
             st.session_state.game_state = "PLAYING"
