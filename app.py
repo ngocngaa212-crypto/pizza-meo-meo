@@ -1,6 +1,5 @@
 import base64
 import os
-import time
 import streamlit as st
 
 st.set_page_config(
@@ -34,7 +33,6 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
 
     button_style = ""
     if is_start_screen:
-        # Nút nhỏ lại (height 52px) và dịch sang phải (margin-left 35px)
         button_style = """
         .stButton > button {
             background: transparent !important;
@@ -53,16 +51,21 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
         }
         """
     else:
+        # Nút bấm trong màn hình bếp
         button_style = """
         .stButton > button {
-            border-radius: 20px;
+            border-radius: 15px;
             font-weight: bold;
-            font-size: 18px;
-            background-color: rgba(255, 243, 224, 0.95);
+            font-size: 15px;
+            background-color: rgba(255, 248, 225, 0.9);
             color: #8D4B38;
-            border: 3px solid #FFB74D;
-            box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
-            padding: 10px 20px;
+            border: 2px solid #FFB74D;
+            box-shadow: 0px 3px 6px rgba(0,0,0,0.15);
+            padding: 5px 10px;
+        }
+        .stButton > button:hover {
+            background-color: #FFE0B2;
+            color: #E65100;
         }
         """
 
@@ -87,12 +90,15 @@ def set_bg_and_style(image_base_name, is_start_screen=False):
     )
 
 
+# Khởi tạo dữ liệu game
 if "game_state" not in st.session_state:
     st.session_state.game_state = "START"
 if "day" not in st.session_state:
     st.session_state.day = 3
 if "coins" not in st.session_state:
     st.session_state.coins = 100
+if "current_pizza" not in st.session_state:
+    st.session_state.current_pizza = []
 
 # ==========================================
 # MÀN HÌNH 1: START GAME
@@ -102,29 +108,71 @@ if st.session_state.game_state == "START":
 
     st.markdown("<br>" * 17, unsafe_allow_html=True)
 
-    # Đổi tỉ lệ cột để làm ô nút gọn lại
     col1, col2, col3 = st.columns([1.2, 1.0, 1.1])
     with col2:
         if st.button("START_GAME_BTN", use_container_width=True):
             st.session_state.game_state = "PLAYING"
+            st.session_state.current_pizza = []
             st.rerun()
 
 # ==========================================
-# MÀN HÌNH 2: BẾP & LÀM BÁNH
+# MÀN HÌNH 2: BẾP LÀM BÁNH
 # ==========================================
 elif st.session_state.game_state == "PLAYING":
     set_bg_and_style("bg_play")
 
-    st.markdown("<br>" * 14, unsafe_allow_html=True)
+    # Khoảng trống đẩy khu vực thao tác xuống bàn bếp
+    st.markdown("<br>" * 11, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if st.button(
-            "🔥 GIAO BÁNH & XEM TỔNG KẾT 🔥", use_container_width=True
-        ):
-            st.session_state.coins += 100
-            st.session_state.game_state = "SUMMARY"
+    # Chia cột khớp với vị trí các khay nguyên liệu trên hình
+    col_de, col_banh, col_khay1, col_khay2, col_lo = st.columns(
+        [1.2, 1.3, 1.2, 1.2, 1.1]
+    )
+
+    with col_de:
+        st.write("🔴 **Khay bột**")
+        if st.button("➕ Đặt đế bánh"):
+            if "Đế bánh" not in st.session_state.current_pizza:
+                st.session_state.current_pizza.append("Đế bánh")
+
+    with col_banh:
+        st.write("🍕 **Chiếc bánh đang làm:**")
+        if not st.session_state.current_pizza:
+            st.caption("(Chưa có nguyên liệu)")
+        else:
+            for item in st.session_state.current_pizza:
+                st.write(f"• {item}")
+        if st.button("🗑️ Làm lại"):
+            st.session_state.current_pizza = []
             st.rerun()
+
+    with col_khay1:
+        st.write("🍅 **Sốt & Phô mai**")
+        if st.button("➕ Sốt cà chua"):
+            st.session_state.current_pizza.append("Sốt cà chua")
+        if st.button("➕ Phô mai"):
+            st.session_state.current_pizza.append("Phô mai")
+        if st.button("➕ Nấm"):
+            st.session_state.current_pizza.append("Nấm")
+
+    with col_khay2:
+        st.write("🥓 **Topping**")
+        if st.button("➕ Xúc xích"):
+            st.session_state.current_pizza.append("Xúc xích")
+        if st.button("➕ Ớt chuông"):
+            st.session_state.current_pizza.append("Ớt chuông")
+        if st.button("➕ Ô liu"):
+            st.session_state.current_pizza.append("Ô liu")
+
+    with col_lo:
+        st.write("🔥 **Lò nướng**")
+        if st.button("🔥 Nướng & Giao bánh"):
+            if len(st.session_state.current_pizza) >= 3:
+                st.session_state.coins += 100
+                st.session_state.game_state = "SUMMARY"
+                st.rerun()
+            else:
+                st.warning("Cho thêm nguyên liệu vào bánh đã ní ơi!")
 
 # ==========================================
 # MÀN HÌNH 3: HẾT GIỜ RỒI!
@@ -140,6 +188,7 @@ elif st.session_state.game_state == "SUMMARY":
         with btn_col1:
             if st.button("🌻 NGÀY MỚI", use_container_width=True):
                 st.session_state.day += 1
+                st.session_state.current_pizza = []
                 st.session_state.game_state = "PLAYING"
                 st.rerun()
         with btn_col2:
