@@ -1,109 +1,153 @@
-import random
+import time
 import streamlit as st
 
 st.set_page_config(
-    page_title="Pizza Meo Meo", page_icon="🐱", layout="centered"
+    page_title="Tiệm Pizza Vui Vẻ", page_icon="🍕", layout="centered"
 )
 
-# Khởi tạo trạng thái trò chơi
-if "coins" not in st.session_state:
-  st.session_state.coins = 10
-if "day" not in st.session_state:
-  st.session_state.day = 1
-if "current_customer" not in st.session_state:
-  st.session_state.current_customer = None
-if "order" not in st.session_state:
-  st.session_state.order = None
+st.title("🍕 Tiệm Pizza Vui Vẻ - Làm Bánh Theo Yêu Cầu")
+st.write(
+    "Chào mừng bạn đến với tiệm pizza! Hãy thiết kế chiếc bánh hoàn hảo cho khách hàng nhé."
+)
 
-# Danh sách khách hàng và yêu cầu
-cat_customers = [
-    {
-        "name": "Mèo Mập",
-        "avatar": "🐱",
-        "text": "Meo... Ta thích pizza đơn giản: Chỉ cần sốt cà chua và phô mai!",
-        "recipe": ["Đế bánh", "Sốt cà chua", "Phô mai"],
-    },
-    {
-        "name": "Mèo Mun",
-        "avatar": "🐈‍⬛",
-        "text": (
-            "Gừ... Ta muốn một chiếc pizza đặc biệt có Phô mai và thật nhiều"
-            " Cá Ngừ!"
-        ),
-        "recipe": ["Đế bánh", "Sốt cà chua", "Phô mai", "Cá ngừ"],
-    },
-    {
-        "name": "Mèo Cam",
-        "avatar": "🐈",
-        "text": (
-            "Meow! Cho tôi chiếc pizza topping Catnip (cỏ bạc hà mèo) để phấn"
-            " khích nào!"
-        ),
-        "recipe": ["Đế bánh", "Sốt cà chua", "Phô mai", "Catnip"],
-    },
+# Khởi tạo trạng thái game (Session State)
+if "score" not in st.session_state:
+    st.session_state.score = 0
+if "orders_completed" not in st.session_state:
+    st.session_state.orders_completed = 0
+
+# Danh sách nguyên liệu
+CRUST_OPTIONS = ["Đế dày giòn", "Đế mỏng truyền thống", "Đế phô mai viền"]
+SAUCE_OPTIONS = ["Sốt Cà Chua Truyền Thống", "Sốt Kem Trắng", "Sốt BBQ"]
+TOPPING_OPTIONS = [
+    "Phô mai Mozzarella 🧀",
+    "Xúc xích Pepperoni 🥓",
+    "Nấm tươi 🍄",
+    "Ớt chuông 🫑",
+    "Hành tây 🧅",
+    "Dứa (Thơm) 🍍",
 ]
 
-st.title("🍕 Pizza Meo Meo")
-st.markdown(
-    "Chào mừng bạn đến với cửa hàng pizza dành riêng cho các chú mèo khó"
-    " tính!"
+# Tạo một đơn hàng ngẫu nhiên (nếu chưa có)
+if "current_order" not in st.session_state:
+    import random
+
+    st.session_state.current_order = {
+        "crust": random.choice(CRUST_OPTIONS),
+        "sauce": random.choice(SAUCE_OPTIONS),
+        "toppings": random.sample(
+            TOPPING_OPTIONS, k=random.randint(2, 4)
+        ),  # Khách yêu cầu 2-4 loại topping
+    }
+
+# Hiển thị yêu cầu của khách hàng
+st.markdown("---")
+st.subheader("📋 Yêu cầu từ Khách hàng:")
+order = st.session_state.current_order
+st.info(
+    f"""
+- **Loại đế:** {order['crust']}
+- **Loại sốt:** {order['sauce']}
+- **Topping yêu cầu:** {', '.join(order['toppings'])}
+"""
 )
 
-# Thanh trạng thái
-col1, col2 = st.columns(2)
-with col1:
-  st.metric(label="Ngày", value=st.session_state.day)
-with col2:
-  st.metric(label="Tiền xu cá khô", value=f"{st.session_state.coins} 🐟")
+# Giao diện cho người chơi làm bánh
+st.markdown("---")
+st.subheader("🧑‍🍳 Bếp làm bánh của bạn:")
 
-st.divider()
+with st.form("pizza_form"):
+    player_crust = st.selectbox("1. Chọn đế bánh:", CRUST_OPTIONS)
+    player_sauce = st.selectbox("2. Chọn loại sốt:", SAUCE_OPTIONS)
 
-# Nếu chưa có khách hàng, gọi khách mới
-if st.session_state.current_customer is None:
-  if st.button("🔔 Đón khách tiếp theo"):
-    st.session_state.current_customer = random.choice(cat_customers)
-    st.rerun()
-else:
-  customer = st.session_state.current_customer
-  st.subheader(f"Khách hàng: {customer['avatar']} {customer['name']}")
-  st.info(f'"{customer["text"]}"')
+    st.write("3. Chọn các loại Topping (chọn những loại khách yêu cầu):")
+    player_toppings = []
+    for t in TOPPING_OPTIONS:
+        if st.checkbox(t):
+            player_toppings.append(t)
 
-  st.write("### 🍳 Khu vực làm bánh:")
-  selected_ingredients = st.multiselect(
-      "Chọn các nguyên liệu cho vào bánh:",
-      [
-          "Đế bánh",
-          "Sốt cà chua",
-          "Phô mai",
-          "Cá ngừ",
-          "Catnip",
-          "Xúc xích",
-          "Dâu tây",
-      ],
-  )
+    submitted = st.form_submit_button("🔥 Đem đi nướng và Phục vụ!")
 
-  if st.button("✨ Đưa bánh cho khách"):
-    # Kiểm tra nguyên liệu
-    target_recipe = set(customer["recipe"])
-    user_recipe = set(selected_ingredients)
+if submitted:
+    # Tính điểm
+    points = 0
+    feedback = []
 
-    if user_recipe == target_recipe:
-      st.success("🎉 Khách mèo kêu gừ gừ vì quá ngon! Bạn nhận được +10 🐟")
-      st.session_state.coins += 10
-    elif target_recipe.issubset(user_recipe):
-      st.warning(
-          "😐 Bánh hơi thừa nguyên liệu một chút, nhưng khách vẫn ăn. Bạn nhận"
-          " được +5 🐟"
-      )
-      st.session_state.coins += 5
+    if player_crust == order["crust"]:
+        points += 30
+        feedback.append("✅ Đúng loại đế bánh (+30đ)")
     else:
-      st.error(
-          "😿 Khách mèo lắc đầu bỏ đi vì làm sai công thức! Bạn bị mất 5 🐟"
-      )
-      st.session_state.coins = max(0, st.session_state.coins - 5)
+        feedback.append("❌ Sai loại đế bánh")
 
-    # Reset khách hàng để đón khách mới
-    st.session_state.current_customer = None
-    if st.button("Tiếp tục ngày mới"):
-      st.session_state.day += 1
-      st.rerun()
+    if player_sauce == order["sauce"]:
+        points += 30
+        feedback.append("✅ Đúng loại sốt (+30đ)")
+    else:
+        feedback.append("❌ Sai loại sốt")
+
+    # Tính điểm topping (khớp chính xác các topping khách muốn)
+    set_order_t = set(order["toppings"])
+    set_player_t = set(player_toppings)
+
+    if set_order_t == set_player_t:
+        points += 40
+        feedback.append("✅ Topping chuẩn xác hoàn hảo! (+40đ)")
+    else:
+        # Tính điểm dựa trên độ chính xác tương đối
+        intersection = len(set_order_t.intersection(set_player_t))
+        union = len(set_order_t.union(set_player_t))
+        match_score = int((intersection / union) * 40) if union > 0 else 0
+        points += match_score
+        feedback.append(
+            f"⚠️ Topping chưa hoàn toàn khớp yêu cầu (+{match_score}đ)"
+        )
+
+    # Hiệu ứng nướng bánh
+    with st.spinner("Đang nướng bánh trong lò vi sóng... Chờ xíu nhé! 🔥"):
+        time.sleep(1.5)
+
+    st.markdown("### Kết quả đánh giá:")
+    for f in feedback:
+        st.write(f)
+
+    if points >= 90:
+        st.balloons()
+        st.success(
+            f"🎉 Xuất sắc! Khách hàng cho bạn {points}/100 điểm và boa thêm tiền!"
+        )
+    elif points >= 50:
+        st.warning(
+            f"😊 Tạm ổn! Khách hàng ăn được với {points}/100 điểm."
+        )
+    else:
+        st.error(
+            f"😢 Khách chê vì làm sai ý họ quá nhiều! Bạn chỉ được {points}/100 điểm."
+        )
+
+    # Cập nhật tổng điểm
+    st.session_state.score += points
+    st.session_state.orders_completed += 1
+
+    # Nút nhận đơn tiếp theo
+    if st.button("🍕 Nhận đơn hàng tiếp theo"):
+        # Tạo đơn mới
+        st.session_state.current_order = {
+            "crust": random.choice(CRUST_OPTIONS),
+            "sauce": random.choice(SAUCE_OPTIONS),
+            "toppings": random.sample(TOPPING_OPTIONS, k=random.randint(2, 4)),
+        }
+        st.rerun()
+
+# Thanh sidebar hiển thị thông số quán
+st.sidebar.title("📊 Thống kê Quán")
+st.sidebar.metric(label="Tổng điểm", value=st.session_state.score)
+st.sidebar.metric(
+    label="Số bánh đã bán", value=st.session_state.orders_completed
+)
+
+if st.sidebar.button("Làm lại từ đầu 🔄"):
+    st.session_state.score = 0
+    st.session_state.orders_completed = 0
+    if "current_order" in st.session_state:
+        del st.session_state.current_order
+    st.rerun()
